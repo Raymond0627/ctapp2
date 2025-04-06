@@ -25,14 +25,110 @@ class _MyPlansPageState extends State<MyPlansPage> {
     });
   }
 
+  // Function to delete a plan
+  Future<void> _deletePlan(int index) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    savedPlans.removeAt(index);
+    await prefs.setStringList('plans', savedPlans);
+    _loadPlans(); // Reload the plans after deletion
+  }
+
+  // Function to delete invalid plan
+  Future<void> _deleteInvalidPlan(int index) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    savedPlans.removeAt(index); // Remove the invalid plan
+    await prefs.setStringList('plans', savedPlans);
+    _loadPlans(); // Reload the plans after deletion
+  }
+
+  // Function to edit a plan
+  Future<void> _editPlan(int index) async {
+    TextEditingController nameController = TextEditingController();
+    DateTime selectedDate = DateTime.now();
+
+    final planParts = savedPlans[index].split(',');
+    final name = planParts[0].split(':')[1].trim().replaceAll("'", "");
+    final date = planParts[1].split(':')[1].trim().replaceAll("'", "");
+
+    nameController.text = name;
+    selectedDate = DateTime.parse(date);
+
+    // Show dialog to edit the plan
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Plan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Plan Name',
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Text('Date: ${selectedDate.toLocal()}'.split(' ')[0]),
+                  IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                      );
+                      if (picked != null && picked != selectedDate) {
+                        selectedDate = picked;
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Cancel
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Update the plan details
+                if (nameController.text.isNotEmpty) {
+                  final updatedPlan = {
+                    'name': nameController.text,
+                    'date': selectedDate.toLocal().toString(),
+                  };
+
+                  savedPlans[index] = updatedPlan.toString();
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.setStringList('plans', savedPlans);
+                  Navigator.pop(context); // Close the dialog
+                  _loadPlans(); // Reload plans
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Sliver App Bar with Expandable Menu
           SliverAppBar(
-            expandedHeight: 150.0, // Reduced height to fit screen
+            expandedHeight: 150.0,
             floating: false,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
@@ -42,7 +138,6 @@ class _MyPlansPageState extends State<MyPlansPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Title
                     const Text(
                       'Manage Your Plans',
                       style: TextStyle(
@@ -51,8 +146,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
                           color: Colors.white),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 10),
-                    // Horizontal Scrollable Row for Buttons
+                    const SizedBox(height: 30),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
@@ -66,30 +160,6 @@ class _MyPlansPageState extends State<MyPlansPage> {
                               _showNewPlanDialog(context);
                             },
                           ),
-                          const SizedBox(width: 10),
-                          _buildExpandableButton(
-                            context,
-                            title: 'Edit Plan',
-                            icon: Icons.edit,
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content:
-                                          Text('Edit Plan button pressed')));
-                            },
-                          ),
-                          const SizedBox(width: 10),
-                          _buildExpandableButton(
-                            context,
-                            title: 'Delete Plan',
-                            icon: Icons.delete_outline,
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content:
-                                          Text('Delete Plan button pressed')));
-                            },
-                          ),
                         ],
                       ),
                     ),
@@ -98,14 +168,12 @@ class _MyPlansPageState extends State<MyPlansPage> {
               ),
             ),
           ),
-          // Content below the AppBar
           SliverList(
             delegate: SliverChildListDelegate([
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    // Move "Here are your plans!" to the center
                     const Center(
                       child: Text(
                         'Here are your plans!',
@@ -116,9 +184,10 @@ class _MyPlansPageState extends State<MyPlansPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Display saved plans
-                    ...savedPlans.map((plan) {
-                      return _buildPlanCard(plan);
+                    ...savedPlans.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      String plan = entry.value;
+                      return _buildPlanCard(plan, index);
                     }).toList(),
                   ],
                 ),
@@ -130,13 +199,12 @@ class _MyPlansPageState extends State<MyPlansPage> {
     );
   }
 
-  // Function to display a card for each saved plan with name and date
-  Widget _buildPlanCard(String plan) {
+  Widget _buildPlanCard(String plan, int index) {
     try {
-      final parts = plan.split(','); // Splitting the string into name and date
+      final parts = plan.split(',');
 
       if (parts.length < 2) {
-        return _buildErrorCard(); // Return an error card if the plan is not in expected format
+        return _buildErrorCard(index); // Pass index to error card for deletion
       }
 
       final name = parts[0].split(':')[1].trim().replaceAll("'", "");
@@ -169,23 +237,32 @@ class _MyPlansPageState extends State<MyPlansPage> {
               color: Colors.grey,
             ),
           ),
-          trailing: Icon(
-            Icons.arrow_forward_ios,
-            size: 20,
-            color: Colors.blueAccent.shade200,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, size: 20),
+                onPressed: () {
+                  _editPlan(index);
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, size: 20),
+                onPressed: () {
+                  _deletePlan(index);
+                },
+              ),
+            ],
           ),
-          onTap: () {
-            // Optionally handle tap event (e.g., navigate to details screen)
-          },
         ),
       );
     } catch (e) {
-      return _buildErrorCard(); // Return an error card if there's an issue with the parsing
+      return _buildErrorCard(
+          index); // Return an error card if there's an issue with the parsing
     }
   }
 
-  // Function to display an error card when plan data is invalid
-  Widget _buildErrorCard() {
+  Widget _buildErrorCard(int index) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       elevation: 5,
@@ -214,16 +291,20 @@ class _MyPlansPageState extends State<MyPlansPage> {
             color: Colors.grey,
           ),
         ),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () {
+            _deleteInvalidPlan(index); // Delete invalid plan
+          },
+        ),
       ),
     );
   }
 
-  // Function to show dialog for creating a new plan
   Future<void> _showNewPlanDialog(BuildContext context) async {
     TextEditingController nameController = TextEditingController();
     DateTime selectedDate = DateTime.now();
 
-    // Show dialog to get plan name and date
     await showDialog(
       context: context,
       builder: (context) {
@@ -269,13 +350,11 @@ class _MyPlansPageState extends State<MyPlansPage> {
             ),
             TextButton(
               onPressed: () async {
-                // Save the plan details
                 if (nameController.text.isNotEmpty) {
                   final newPlan = {
                     'name': nameController.text,
                     'date': selectedDate.toLocal().toString(),
                   };
-                  // Save the plan to SharedPreferences (or a file)
                   SharedPreferences prefs =
                       await SharedPreferences.getInstance();
                   List<String> plans = prefs.getStringList('plans') ?? [];
@@ -293,7 +372,6 @@ class _MyPlansPageState extends State<MyPlansPage> {
     );
   }
 
-  // Function to create a minimalist and expandable button with individual animation
   Widget _buildExpandableButton(
     BuildContext context, {
     required String title,
@@ -308,15 +386,13 @@ class _MyPlansPageState extends State<MyPlansPage> {
         return GestureDetector(
           onTap: () {
             _isPressed.value = true;
-            // Trigger the onPressed callback after animation
             Future.delayed(const Duration(milliseconds: 200), () {
-              _isPressed.value = false; // Reset animation after 200ms
+              _isPressed.value = false;
             });
-            onPressed(); // Call the actual action
+            onPressed();
           },
           child: AnimatedScale(
-            scale:
-                isPressed ? 1.2 : 1.0, // Animate scale for the clicked button
+            scale: isPressed ? 1.2 : 1.0,
             duration: const Duration(milliseconds: 200),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -335,13 +411,13 @@ class _MyPlansPageState extends State<MyPlansPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(icon, color: Colors.blue, size: 18), // Reduced icon size
+                  Icon(icon, color: Colors.blue, size: 18),
                   const SizedBox(width: 8),
                   Text(
                     title,
                     style: const TextStyle(
                       color: Colors.blue,
-                      fontSize: 12, // Reduced font size
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
