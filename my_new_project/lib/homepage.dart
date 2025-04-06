@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'drawer.dart'; // Import your custom drawer
 import 'stockcalculator.dart';
+import 'planpage.dart'; // Import the new MyPlansPage
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -194,10 +195,16 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             ),
                           ),
-                          // Task Manager (no animation)
+                          // Task Manager
                           GestureDetector(
                             onTap: () {
-                              // Add animation or action if needed
+                              // Navigate to MyPlansPage
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const MyPlansPage(),
+                                ),
+                              );
                             },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
@@ -207,7 +214,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 color: Colors.white,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.withValues(alpha: 0.5),
+                                    color: Colors.grey
+                                        .withAlpha((0.5 * 255).toInt()),
                                     spreadRadius: 2,
                                     blurRadius: 5,
                                     offset: const Offset(0, 3),
