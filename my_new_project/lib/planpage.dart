@@ -1,4 +1,4 @@
-import 'package:ctapp/stockcalculator.dart';
+import 'package:coreteam/stockcalculator.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';

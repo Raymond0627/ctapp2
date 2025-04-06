@@ -3,8 +3,7 @@ import 'drawer.dart'; // Import your custom drawer
 import 'planpage.dart'; // Import the new MyPlansPage
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -93,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 curve: Curves.easeInOut,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
-                  color: Colors.grey.shade200,
+                  color: const Color.fromARGB(255, 255, 255, 255),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.grey.withAlpha((0.5 * 255).toInt()),
@@ -124,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
-                          // Task Manager Icon in home page
+                          // Stock Plan Icon in home page
                           GestureDetector(
                             onTap: () {
                               // Navigate to MyPlansPage
