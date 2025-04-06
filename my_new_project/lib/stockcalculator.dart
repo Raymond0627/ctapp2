@@ -183,6 +183,57 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
             sum + (item['price'] as double) * (item['quantity'] as int? ?? 0));
   }
 
+  void _showEditItemDialog(int index) {
+    final nameController = TextEditingController(text: _items[index]['name']);
+    final priceController =
+        TextEditingController(text: _items[index]['price'].toString());
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Item Info'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Item Name'),
+              ),
+              TextField(
+                controller: priceController,
+                decoration: const InputDecoration(labelText: 'Price'),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final String name = nameController.text.trim();
+                final double? price = double.tryParse(priceController.text);
+
+                if (name.isNotEmpty && price != null) {
+                  setState(() {
+                    _items[index]['name'] = name;
+                    _items[index]['price'] = price;
+                  });
+                  _saveItems();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -226,19 +277,39 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                   return Dismissible(
                     key: Key('${item['name']}$index'),
                     background: Container(
-                      color: const Color.fromARGB(255, 54, 133, 244),
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.delete, color: Colors.white),
+                      margin:
+                          const EdgeInsets.only(bottom: 8), // Match the margin
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 243, 33, 33),
+                        borderRadius:
+                            BorderRadius.circular(8), // Match the radius
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                      ),
                     ),
                     secondaryBackground: Container(
-                      color: const Color.fromARGB(255, 243, 33, 33),
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 20),
-                      child: const Icon(Icons.edit, color: Colors.white),
+                      margin:
+                          const EdgeInsets.only(bottom: 8), // Match the margin
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 54, 133, 244),
+                        borderRadius:
+                            BorderRadius.circular(8), // Match the radius
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: const Icon(Icons.edit, color: Colors.white),
+                        ),
+                      ),
                     ),
                     confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.endToStart) {
+                      if (direction == DismissDirection.startToEnd) {
                         return await showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -261,14 +332,14 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                             );
                           },
                         );
-                      } else if (direction == DismissDirection.startToEnd) {
-                        _showEditQuantityDialog(index);
+                      } else if (direction == DismissDirection.endToStart) {
+                        _showEditItemDialog(index);
                         return false;
                       }
                       return false;
                     },
                     onDismissed: (direction) {
-                      if (direction == DismissDirection.endToStart) {
+                      if (direction == DismissDirection.startToEnd) {
                         _deleteItem(index);
                       }
                     },
@@ -279,84 +350,90 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withValues(alpha: 0.2),
+                            color: Colors.grey.withOpacity(0.2),
                             spreadRadius: 1,
                             blurRadius: 3,
                             offset: const Offset(0, 1),
                           ),
                         ],
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item['name'],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
+                      child: IntrinsicHeight(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item['name'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  'Price: \ ${item['price'].toStringAsFixed(2)}',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () =>
-                                      _showEditQuantityDialog(index),
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 4),
-                                    backgroundColor: const Color.fromARGB(
-                                        255, 255, 255, 255),
-                                    foregroundColor: Colors.black87,
-                                    side: BorderSide(
-                                        color: const Color.fromARGB(
-                                            255, 255, 255, 255)),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Qty: ${item['quantity']}',
+                                  Text(
+                                    'Price: ${item['price'].toStringAsFixed(2)}',
                                     style: const TextStyle(fontSize: 13),
                                   ),
-                                ),
-                                Text(
-                                  'Total Price: \ ${totalPrice.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: () =>
+                                        _showEditQuantityDialog(index),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 4),
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 255, 255, 255),
+                                      foregroundColor: Colors.black87,
+                                      side: BorderSide(
+                                          color: const Color.fromARGB(
+                                              255, 255, 255, 255)),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Qty: ${item['quantity']}',
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
                                   ),
-                                ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      onPressed: () => _decreaseQuantity(index),
-                                      icon: const Icon(Icons.remove_circle,
-                                          size: 28, color: Colors.redAccent),
+                                  Text(
+                                    'Total Price: ${totalPrice.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    IconButton(
-                                      onPressed: () => _increaseQuantity(index),
-                                      icon: const Icon(Icons.add_circle,
-                                          size: 28, color: Colors.green),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        onPressed: () =>
+                                            _decreaseQuantity(index),
+                                        icon: const Icon(Icons.remove_circle,
+                                            size: 28, color: Colors.redAccent),
+                                      ),
+                                      IconButton(
+                                        onPressed: () =>
+                                            _increaseQuantity(index),
+                                        icon: const Icon(Icons.add_circle,
+                                            size: 28, color: Colors.green),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
