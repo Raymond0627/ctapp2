@@ -350,7 +350,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
+                            color: Colors.grey.withValues(alpha: 0.2),
                             spreadRadius: 1,
                             blurRadius: 3,
                             offset: const Offset(0, 1),
@@ -456,7 +456,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    '\ ${_calculateTotalPrice().toStringAsFixed(2)}',
+                    ' ${_calculateTotalPrice().toStringAsFixed(2)}',
                     style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
