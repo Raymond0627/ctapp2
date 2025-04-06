@@ -126,76 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
-                          // Stock Calculator with tap animation
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _isStockCalculatorTapped = true;
-                              });
-
-                              Future.delayed(const Duration(milliseconds: 100),
-                                  () {
-                                if (mounted) {
-                                  setState(() {
-                                    _isStockCalculatorTapped = false;
-                                  });
-                                }
-
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const StockCalculatorPage()),
-                                );
-                              });
-                            },
-                            child: AnimatedScale(
-                              scale: _isStockCalculatorTapped ? 0.95 : 1.0,
-                              duration: const Duration(milliseconds: 100),
-                              curve: Curves.easeInOut,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: _isStockCalculatorTapped
-                                      ? Colors.green.shade100
-                                      : Colors.white,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey
-                                          .withAlpha((0.5 * 255).toInt()),
-                                      spreadRadius: 2,
-                                      blurRadius: 5,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(
-                                      Icons.calculate,
-                                      size: 32,
-                                      color: Colors.green,
-                                    ),
-                                    SizedBox(height: 8),
-                                    Center(
-                                      child: Text(
-                                        'Stock Calculator',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Task Manager
+                          // Task Manager Icon in home page
                           GestureDetector(
                             onTap: () {
                               // Navigate to MyPlansPage
@@ -233,7 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   SizedBox(height: 8),
                                   Center(
                                     child: Text(
-                                      'Task Manager',
+                                      'Stock Plan',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 14,

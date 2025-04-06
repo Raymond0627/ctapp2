@@ -1,6 +1,7 @@
+import 'package:ctapp/stockcalculator.dart';
 import 'package:flutter/material.dart';
-import 'dart:io'; // Import the necessary package for file operations
-import 'package:path_provider/path_provider.dart'; // Import to get the document directory
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class MyPlansPage extends StatefulWidget {
   const MyPlansPage({super.key});
@@ -18,19 +19,15 @@ class _MyPlansPageState extends State<MyPlansPage> {
     _loadPlans();
   }
 
-  // Get the local file where plans will be saved
   Future<File> _getLocalFile() async {
     final directory = await getApplicationDocumentsDirectory();
     final path = directory.path;
-    return File(
-        '$path/plans.txt'); // Store in plans.txt in the documents directory
+    return File('$path/plans.txt');
   }
 
-  // Function to load saved plans from the file
   Future<void> _loadPlans() async {
     try {
       final file = await _getLocalFile();
-      // If the file does not exist, create it
       if (!(await file.exists())) {
         await file.create();
       }
@@ -44,26 +41,23 @@ class _MyPlansPageState extends State<MyPlansPage> {
     }
   }
 
-  // Function to save plans to the file
   Future<void> _savePlans() async {
     try {
       final file = await _getLocalFile();
       final contents = savedPlans.join('\n');
-      await file.writeAsString(contents); // Save the plans as a string
+      await file.writeAsString(contents);
     } catch (e) {
       print('Error saving plans: $e');
     }
   }
 
-  // Function to delete a plan
   Future<void> _deletePlan(int index) async {
     setState(() {
-      savedPlans.removeAt(index); // Remove the plan from the list
+      savedPlans.removeAt(index);
     });
-    await _savePlans(); // Save the updated list
+    await _savePlans();
   }
 
-  // Function to edit a plan
   Future<void> _editPlan(int index) async {
     TextEditingController nameController = TextEditingController();
     DateTime selectedDate = DateTime.now();
@@ -75,7 +69,6 @@ class _MyPlansPageState extends State<MyPlansPage> {
     nameController.text = name;
     selectedDate = DateTime.parse(date);
 
-    // Show dialog to edit the plan
     await showDialog(
       context: context,
       builder: (context) {
@@ -86,9 +79,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Plan Name',
-                ),
+                decoration: const InputDecoration(labelText: 'Plan Name'),
               ),
               const SizedBox(height: 10),
               Row(
@@ -104,7 +95,9 @@ class _MyPlansPageState extends State<MyPlansPage> {
                         lastDate: DateTime(2101),
                       );
                       if (picked != null && picked != selectedDate) {
-                        selectedDate = picked;
+                        setState(() {
+                          selectedDate = picked;
+                        });
                       }
                     },
                   ),
@@ -114,24 +107,20 @@ class _MyPlansPageState extends State<MyPlansPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Cancel
-              },
+              onPressed: () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
-                // Update the plan details
                 if (nameController.text.isNotEmpty) {
                   final updatedPlan = {
                     'name': nameController.text,
                     'date': selectedDate.toLocal().toString(),
                   };
-
                   savedPlans[index] = updatedPlan.toString();
-                  await _savePlans(); // Save the updated plan
-                  Navigator.pop(context); // Close the dialog
-                  _loadPlans(); // Reload plans
+                  await _savePlans();
+                  Navigator.pop(context);
+                  _loadPlans();
                 }
               },
               child: const Text('Save'),
@@ -161,9 +150,10 @@ class _MyPlansPageState extends State<MyPlansPage> {
                     const Text(
                       'Manage Your Plans',
                       style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 30),
@@ -189,30 +179,32 @@ class _MyPlansPageState extends State<MyPlansPage> {
             ),
           ),
           SliverList(
-            delegate: SliverChildListDelegate([
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    const Center(
-                      child: Text(
-                        'Here are your plans!',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+            delegate: SliverChildListDelegate(
+              [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      const Center(
+                        child: Text(
+                          'Here are your plans!',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    ...savedPlans.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      String plan = entry.value;
-                      return _buildPlanCard(plan, index);
-                    }).toList(),
-                  ],
+                      const SizedBox(height: 20),
+                      ...savedPlans.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        String plan = entry.value;
+                        return _buildPlanCard(plan, index);
+                      }).toList(),
+                    ],
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
         ],
       ),
@@ -222,9 +214,8 @@ class _MyPlansPageState extends State<MyPlansPage> {
   Widget _buildPlanCard(String plan, int index) {
     try {
       final parts = plan.split(',');
-
       if (parts.length < 2) {
-        return _buildErrorCard(index); // Pass index to error card for deletion
+        return _buildErrorCard(index);
       }
 
       final name = parts[0].split(':')[1].trim().replaceAll("'", "");
@@ -238,38 +229,49 @@ class _MyPlansPageState extends State<MyPlansPage> {
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.all(16.0),
-          leading: Icon(
-            Icons.calendar_today,
-            color: Colors.blueAccent.shade200,
-            size: 30,
-          ),
+          leading:
+              Icon(Icons.calendar_today, color: Colors.blueAccent.shade200),
           title: Text(
             name,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           subtitle: Text(
             date,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 icon: const Icon(Icons.edit, size: 20),
-                onPressed: () {
-                  _editPlan(index);
-                },
+                onPressed: () => _editPlan(index),
               ),
               IconButton(
                 icon: const Icon(Icons.delete, size: 20),
-                onPressed: () {
-                  _deletePlan(index);
+                onPressed: () => _deletePlan(index),
+              ),
+              // In the _buildPlanCard method, modify the onPressed for the calculator icon:
+              IconButton(
+                icon: const Icon(Icons.calculate, size: 20),
+                tooltip: 'Stock Calculator',
+                onPressed: () async {
+                  final planParts = savedPlans[index].split(',');
+                  final name =
+                      planParts[0].split(':')[1].trim().replaceAll("'", "");
+
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StockCalculatorPage(planName: name),
+                    ),
+                  );
+
+                  if (result != null) {
+                    setState(() {
+                      savedPlans.add(result);
+                    });
+                    await _savePlans();
+                  }
                 },
               ),
             ],
@@ -277,8 +279,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
         ),
       );
     } catch (e) {
-      return _buildErrorCard(
-          index); // Return an error card if there's an issue with the parsing
+      return _buildErrorCard(index);
     }
   }
 
@@ -291,31 +292,19 @@ class _MyPlansPageState extends State<MyPlansPage> {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16.0),
-        leading: Icon(
-          Icons.error_outline,
-          color: Colors.red,
-          size: 30,
-        ),
+        leading: const Icon(Icons.error_outline, color: Colors.red, size: 30),
         title: const Text(
           'Invalid Plan Data',
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.red,
-          ),
+              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
         ),
         subtitle: const Text(
           'There was an error loading this plan.',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey),
         ),
         trailing: IconButton(
           icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: () {
-            _deletePlan(index); // Delete invalid plan
-          },
+          onPressed: () => _deletePlan(index),
         ),
       ),
     );
@@ -335,9 +324,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Plan Name',
-                ),
+                decoration: const InputDecoration(labelText: 'Plan Name'),
               ),
               const SizedBox(height: 10),
               Row(
@@ -363,9 +350,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Cancel
-              },
+              onPressed: () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),
             TextButton(
@@ -378,9 +363,9 @@ class _MyPlansPageState extends State<MyPlansPage> {
                   setState(() {
                     savedPlans.add(newPlan.toString());
                   });
-                  await _savePlans(); // Save the new plan
-                  Navigator.pop(context); // Close the dialog
-                  _loadPlans(); // Reload plans
+                  await _savePlans();
+                  Navigator.pop(context);
+                  _loadPlans();
                 }
               },
               child: const Text('Save'),
@@ -391,12 +376,10 @@ class _MyPlansPageState extends State<MyPlansPage> {
     );
   }
 
-  Widget _buildExpandableButton(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
+  Widget _buildExpandableButton(BuildContext context,
+      {required String title,
+      required IconData icon,
+      required VoidCallback onPressed}) {
     return GestureDetector(
       onTap: onPressed,
       child: AnimatedContainer(
@@ -429,6 +412,19 @@ class _MyPlansPageState extends State<MyPlansPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+// Dummy StockCalculatorScreen so it works
+class StockCalculatorScreen extends StatelessWidget {
+  const StockCalculatorScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Stock Calculator")),
+      body: const Center(child: Text("This is the stock calculator screen.")),
     );
   }
 }

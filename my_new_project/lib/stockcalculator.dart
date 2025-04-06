@@ -3,7 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class StockCalculatorPage extends StatefulWidget {
-  const StockCalculatorPage({super.key});
+  final String planName;
+
+  const StockCalculatorPage({super.key, required this.planName});
 
   @override
   State<StockCalculatorPage> createState() => _StockCalculatorPageState();
@@ -21,7 +23,8 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
 
   Future<void> _loadItems() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? savedItems = prefs.getString('stock_items');
+    final String? savedItems =
+        prefs.getString('stock_items_${widget.planName}');
     if (savedItems != null) {
       setState(() {
         _items = List<Map<String, dynamic>>.from(json.decode(savedItems));
@@ -31,7 +34,8 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
 
   Future<void> _saveItems() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('stock_items', json.encode(_items));
+    await prefs.setString(
+        'stock_items_${widget.planName}', json.encode(_items));
   }
 
   void _showNewItemDialog() {
