@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io'; // Import the necessary package for file operations
+import 'package:path_provider/path_provider.dart'; // Import to get the document directory
 
 class MyPlansPage extends StatefulWidget {
   const MyPlansPage({super.key});
@@ -17,28 +18,49 @@ class _MyPlansPageState extends State<MyPlansPage> {
     _loadPlans();
   }
 
-  // Function to load saved plans from SharedPreferences
+  // Get the local file where plans will be saved
+  Future<File> _getLocalFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final path = directory.path;
+    return File(
+        '$path/plans.txt'); // Store in plans.txt in the documents directory
+  }
+
+  // Function to load saved plans from the file
   Future<void> _loadPlans() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      savedPlans = prefs.getStringList('plans') ?? [];
-    });
+    try {
+      final file = await _getLocalFile();
+      // If the file does not exist, create it
+      if (!(await file.exists())) {
+        await file.create();
+      }
+
+      final contents = await file.readAsString();
+      setState(() {
+        savedPlans = contents.isNotEmpty ? contents.split('\n') : [];
+      });
+    } catch (e) {
+      print('Error loading plans: $e');
+    }
+  }
+
+  // Function to save plans to the file
+  Future<void> _savePlans() async {
+    try {
+      final file = await _getLocalFile();
+      final contents = savedPlans.join('\n');
+      await file.writeAsString(contents); // Save the plans as a string
+    } catch (e) {
+      print('Error saving plans: $e');
+    }
   }
 
   // Function to delete a plan
   Future<void> _deletePlan(int index) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    savedPlans.removeAt(index);
-    await prefs.setStringList('plans', savedPlans);
-    _loadPlans(); // Reload the plans after deletion
-  }
-
-  // Function to delete invalid plan
-  Future<void> _deleteInvalidPlan(int index) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    savedPlans.removeAt(index); // Remove the invalid plan
-    await prefs.setStringList('plans', savedPlans);
-    _loadPlans(); // Reload the plans after deletion
+    setState(() {
+      savedPlans.removeAt(index); // Remove the plan from the list
+    });
+    await _savePlans(); // Save the updated list
   }
 
   // Function to edit a plan
@@ -107,9 +129,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
                   };
 
                   savedPlans[index] = updatedPlan.toString();
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  await prefs.setStringList('plans', savedPlans);
+                  await _savePlans(); // Save the updated plan
                   Navigator.pop(context); // Close the dialog
                   _loadPlans(); // Reload plans
                 }
@@ -294,7 +314,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
         trailing: IconButton(
           icon: const Icon(Icons.delete, color: Colors.red),
           onPressed: () {
-            _deleteInvalidPlan(index); // Delete invalid plan
+            _deletePlan(index); // Delete invalid plan
           },
         ),
       ),
@@ -355,11 +375,10 @@ class _MyPlansPageState extends State<MyPlansPage> {
                     'name': nameController.text,
                     'date': selectedDate.toLocal().toString(),
                   };
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  List<String> plans = prefs.getStringList('plans') ?? [];
-                  plans.add(newPlan.toString());
-                  await prefs.setStringList('plans', plans);
+                  setState(() {
+                    savedPlans.add(newPlan.toString());
+                  });
+                  await _savePlans(); // Save the new plan
                   Navigator.pop(context); // Close the dialog
                   _loadPlans(); // Reload plans
                 }
@@ -378,55 +397,38 @@ class _MyPlansPageState extends State<MyPlansPage> {
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    ValueNotifier<bool> _isPressed = ValueNotifier<bool>(false);
-
-    return ValueListenableBuilder<bool>(
-      valueListenable: _isPressed,
-      builder: (context, isPressed, child) {
-        return GestureDetector(
-          onTap: () {
-            _isPressed.value = true;
-            Future.delayed(const Duration(milliseconds: 200), () {
-              _isPressed.value = false;
-            });
-            onPressed();
-          },
-          child: AnimatedScale(
-            scale: isPressed ? 1.2 : 1.0,
-            duration: const Duration(milliseconds: 200),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, color: Colors.blue, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+    return GestureDetector(
+      onTap: onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.blue, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.blue,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }
