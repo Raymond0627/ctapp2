@@ -11,6 +11,7 @@ class StockCalculatorPage extends StatefulWidget {
 
 class _StockCalculatorPageState extends State<StockCalculatorPage> {
   List<Map<String, dynamic>> _items = [];
+  bool _isMenuExpanded = false;
 
   @override
   void initState() {
@@ -245,27 +246,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: _showNewItemDialog,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                  child: const Text('New Item'),
-                ),
-                ElevatedButton(
-                  onPressed: _deleteAllItems,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                  child: const Text('Delete All'),
-                ),
-              ],
-            ),
+            // Removed the top buttons since we're moving them to the bottom
             const SizedBox(height: 15),
             Expanded(
               child: ListView.builder(
@@ -277,12 +258,10 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                   return Dismissible(
                     key: Key('${item['name']}$index'),
                     background: Container(
-                      margin:
-                          const EdgeInsets.only(bottom: 8), // Match the margin
+                      margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
                         color: const Color.fromARGB(255, 243, 33, 33),
-                        borderRadius:
-                            BorderRadius.circular(8), // Match the radius
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Align(
                         alignment: Alignment.centerRight,
@@ -293,12 +272,10 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                       ),
                     ),
                     secondaryBackground: Container(
-                      margin:
-                          const EdgeInsets.only(bottom: 8), // Match the margin
+                      margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
                         color: const Color.fromARGB(255, 54, 133, 244),
-                        borderRadius:
-                            BorderRadius.circular(8), // Match the radius
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Align(
                         alignment: Alignment.centerLeft,
@@ -441,29 +418,144 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                 },
               ),
             ),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(8)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Total:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 10),
+              height: _isMenuExpanded ? 65 : 0,
+              curve: Curves.easeInOut,
+              child: OverflowBox(
+                maxHeight: 65, // Prevents overflow
+                alignment: Alignment.topCenter,
+                child: AnimatedOpacity(
+                  opacity: _isMenuExpanded ? 1 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _actionBox(
+                          icon: Icons.add,
+                          label: 'Add',
+                          onTap: _showNewItemDialog,
+                        ),
+                        _actionBox(
+                          icon: Icons.delete,
+                          label: 'Clear',
+                          onTap: _deleteAllItems,
+                        ),
+                        _actionBox(
+                          icon: Icons.save,
+                          label: 'Save',
+                          onTap: _saveItems,
+                        ),
+                      ],
+                    ),
                   ),
-                  Text(
-                    ' ${_calculateTotalPrice().toStringAsFixed(2)}',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 255, 255, 255),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(8),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withValues(alpha: 0.2),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      _isMenuExpanded ? Icons.expand_less : Icons.expand_more,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isMenuExpanded = !_isMenuExpanded;
+                      });
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Overall Total:',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        ' ${_calculateTotalPrice().toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionBox({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Flexible(
+      // Changed from Expanded to Flexible for better control
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Material(
+          color: const Color.fromARGB(0, 255, 255, 255),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              constraints: const BoxConstraints(
+                minHeight: 50,
+                maxHeight: 50,
+              ),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 255, 255, 255),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, size: 18, color: Colors.teal),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
