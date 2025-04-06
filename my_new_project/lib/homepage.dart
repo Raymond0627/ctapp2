@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'drawer.dart'; // Import your custom drawer
-import 'stockcalculator.dart';
 import 'planpage.dart'; // Import the new MyPlansPage
 
 class MyHomePage extends StatefulWidget {
@@ -13,7 +12,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _isStockCalculatorTapped = false;
 
   Widget _buildInfoCard(
       String title, String value, Color color, IconData icon) {

@@ -7,6 +7,7 @@ class MyPlansPage extends StatefulWidget {
   const MyPlansPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _MyPlansPageState createState() => _MyPlansPageState();
 }
 
@@ -37,6 +38,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
         savedPlans = contents.isNotEmpty ? contents.split('\n') : [];
       });
     } catch (e) {
+      // ignore: avoid_print
       print('Error loading plans: $e');
     }
   }
@@ -47,6 +49,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
       final contents = savedPlans.join('\n');
       await file.writeAsString(contents);
     } catch (e) {
+      // ignore: avoid_print
       print('Error saving plans: $e');
     }
   }
@@ -199,7 +202,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
                         int index = entry.key;
                         String plan = entry.value;
                         return _buildPlanCard(plan, index);
-                      }).toList(),
+                      })
                     ],
                   ),
                 ),
@@ -390,7 +393,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
