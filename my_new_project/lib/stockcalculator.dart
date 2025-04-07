@@ -38,28 +38,94 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
         'stock_items_${widget.planName}', json.encode(_items));
   }
 
+  final List<Color> availableColors = [
+    Colors.red.shade100, // Slightly stronger red
+    Colors.orange.shade100, // Slightly stronger orange
+    Colors.purple.shade100, // Slightly stronger violet
+    Colors.green.shade100, // Slightly stronger green
+    Colors.yellow.shade100, // Slightly stronger yellow
+    Colors.blue.shade100, // Slightly stronger blue
+    const Color.fromARGB(255, 212, 212, 212), // Slightly stronger gray
+    Colors.white, // Base white color
+    Colors.red.shade50, // Much softer red
+    Colors.blue.shade50, // Much softer blue
+    Colors.green.shade50, // Much softer green
+    Colors.yellow.shade50, // Much softer yellow
+    Colors.orange.shade50, // Much softer orange
+    Colors.pink.shade50, // Much softer pink
+  ];
+
   void _showNewItemDialog() {
     final nameController = TextEditingController();
     final priceController = TextEditingController();
+    final selectedColorNotifier =
+        ValueNotifier<Color>(Colors.white); // Use ValueNotifier
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add New Item'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Item Name'),
-              ),
-              TextField(
-                controller: priceController,
-                decoration: const InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-              ),
-            ],
+          content: SingleChildScrollView(
+            // Wrap content to make it scrollable
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Item Name'),
+                ),
+                TextField(
+                  controller: priceController,
+                  decoration: const InputDecoration(labelText: 'Price'),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                ),
+                const SizedBox(height: 10),
+                const Text('Select Color:', style: TextStyle(fontSize: 14)),
+                ValueListenableBuilder<Color>(
+                  valueListenable: selectedColorNotifier,
+                  builder: (context, selectedColor, child) {
+                    return Wrap(
+                      spacing: 5,
+                      children: availableColors.map((color) {
+                        return GestureDetector(
+                          onTap: () {
+                            selectedColorNotifier.value =
+                                color; // Update selected color
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical:
+                                    5), // Top and bottom space for each color
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: color,
+                                border: Border.all(
+                                  color: selectedColor == color
+                                      ? Colors.black
+                                      : Colors.transparent,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26, // Light shadow color
+                                    blurRadius: 3, // Soft shadow
+                                    offset: Offset(2, 2), // Shadow offset
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -73,7 +139,13 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
 
                 if (name.isNotEmpty && price != null) {
                   setState(() {
-                    _items.add({'name': name, 'price': price, 'quantity': 0});
+                    _items.add({
+                      'name': name,
+                      'price': price,
+                      'quantity': 0,
+                      'color': selectedColorNotifier.value.value
+                          .toRadixString(16), // Store color as hex
+                    });
                   });
                   _saveItems();
                   Navigator.of(context).pop();
@@ -192,6 +264,10 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
     final nameController = TextEditingController(text: _items[index]['name']);
     final priceController =
         TextEditingController(text: _items[index]['price'].toString());
+    // Using ValueNotifier for selected color
+    final ValueNotifier<Color> selectedColorNotifier = ValueNotifier<Color>(
+      Color(int.parse(_items[index]['color'] ?? 'FFFFFFFF', radix: 16)),
+    );
 
     showDialog(
       context: context,
@@ -210,6 +286,50 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                 decoration: const InputDecoration(labelText: 'Price'),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
               ),
+              const SizedBox(height: 10),
+              const Text('Select Color:', style: TextStyle(fontSize: 14)),
+              ValueListenableBuilder<Color>(
+                valueListenable: selectedColorNotifier,
+                builder: (context, selectedColor, child) {
+                  return Wrap(
+                    spacing: 5,
+                    children: availableColors.map((color) {
+                      return GestureDetector(
+                        onTap: () {
+                          selectedColorNotifier.value =
+                              color; // Update selected color
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical:
+                                  5), // Top and bottom space for each color
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: color,
+                              border: Border.all(
+                                color: selectedColor == color
+                                    ? Colors.black
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26, // Light shadow color
+                                  blurRadius: 3, // Soft shadow
+                                  offset: Offset(2, 2), // Shadow offset
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
             ],
           ),
           actions: [
@@ -226,6 +346,8 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                   setState(() {
                     _items[index]['name'] = name;
                     _items[index]['price'] = price;
+                    _items[index]['color'] =
+                        selectedColorNotifier.value.value.toRadixString(16);
                   });
                   _saveItems();
                   Navigator.of(context).pop();
@@ -324,14 +446,16 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                         _deleteItem(index);
                       }
                     },
+                    //item container
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Color(int.parse(item['color'] ?? 'FFFFFFFF',
+                            radix: 16)), // Default white
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withValues(alpha: 0.2),
+                            color: Colors.grey.withOpacity(0.2),
                             spreadRadius: 1,
                             blurRadius: 3,
                             offset: const Offset(0, 1),
