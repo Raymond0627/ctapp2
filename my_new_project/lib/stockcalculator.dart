@@ -372,7 +372,6 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            // Removed the top buttons since we're moving them to the bottom
             const SizedBox(height: 15),
             Expanded(
               child: ListView.builder(
@@ -446,7 +445,6 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                         _deleteItem(index);
                       }
                     },
-                    //item container
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
@@ -464,7 +462,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                       ),
                       child: IntrinsicHeight(
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(3.0), // Reduced padding
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -477,13 +475,14 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                                       item['name'],
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 15,
+                                        fontSize: 14, // Smaller font size
                                       ),
                                     ),
                                   ),
                                   Text(
                                     'Price: ${item['price'].toStringAsFixed(2)}',
-                                    style: const TextStyle(fontSize: 13),
+                                    style: const TextStyle(
+                                        fontSize: 12), // Smaller font size
                                   ),
                                 ],
                               ),
@@ -496,26 +495,37 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                                         _showEditQuantityDialog(index),
                                     style: ElevatedButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 4),
-                                      backgroundColor: const Color.fromARGB(
-                                          255, 255, 255, 255),
-                                      foregroundColor: Colors.black87,
-                                      side: BorderSide(
-                                          color: const Color.fromARGB(
-                                              255, 255, 255, 255)),
+                                          horizontal: 6,
+                                          vertical: 2), // Even smaller padding
+                                      backgroundColor: Colors
+                                          .transparent, // Transparent background for a flat look
+                                      foregroundColor:
+                                          Colors.black87, // Text color
+                                      elevation:
+                                          0, // No elevation for a flat button
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(
+                                            4), // Smaller, sharper corners
+                                      ),
+                                      side: BorderSide(
+                                        color: Colors.black.withOpacity(
+                                            0.1), // Very subtle border
+                                        width: 1,
                                       ),
                                     ),
                                     child: Text(
                                       'Qty: ${item['quantity']}',
-                                      style: const TextStyle(fontSize: 13),
+                                      style: const TextStyle(
+                                        fontSize: 13, // Smaller font size
+                                        fontWeight: FontWeight
+                                            .w700, // Subtle boldness for the text
+                                      ),
                                     ),
                                   ),
                                   Text(
                                     'Total Price: ${totalPrice.toStringAsFixed(2)}',
                                     style: const TextStyle(
-                                      fontSize: 15,
+                                      fontSize: 13, // Smaller font size
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -525,13 +535,13 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                                         onPressed: () =>
                                             _decreaseQuantity(index),
                                         icon: const Icon(Icons.remove_circle,
-                                            size: 28, color: Colors.redAccent),
+                                            size: 24, color: Colors.redAccent),
                                       ),
                                       IconButton(
                                         onPressed: () =>
                                             _increaseQuantity(index),
                                         icon: const Icon(Icons.add_circle,
-                                            size: 28, color: Colors.green),
+                                            size: 24, color: Colors.green),
                                       ),
                                     ],
                                   ),
@@ -583,7 +593,6 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                 ),
               ),
             ),
-
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 3),
               decoration: BoxDecoration(
@@ -593,7 +602,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withValues(alpha: 0.2),
+                    color: Colors.grey.withOpacity(0.2),
                     spreadRadius: 1,
                     blurRadius: 3,
                     offset: const Offset(0, 1),
