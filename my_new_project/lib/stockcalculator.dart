@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -205,6 +207,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        //delete confirmation dialog
         return AlertDialog(
           title: const Text('Confirm Delete All'),
           content: const Text('Are you sure you want to delete all items?'),
@@ -235,6 +238,40 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
       _items.removeAt(index);
     });
     _saveItems();
+  }
+
+  void _clearAllQty() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Clear All Quantities'),
+          content: const Text(
+              'Are you sure you want to clear the quantity for all items?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Clear all quantities
+                setState(() {
+                  for (var item in _items) {
+                    item['quantity'] = 0;
+                  }
+                });
+                _saveItems(); // Save the updated state to storage
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Clear All'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _increaseQuantity(int index) {
@@ -579,13 +616,13 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                         ),
                         _actionBox(
                           icon: Icons.delete,
-                          label: 'Clear',
+                          label: 'Delete All',
                           onTap: _deleteAllItems,
                         ),
                         _actionBox(
-                          icon: Icons.save,
-                          label: 'Save',
-                          onTap: _saveItems,
+                          icon: Icons.cleaning_services_rounded,
+                          label: 'Clear All',
+                          onTap: _clearAllQty,
                         ),
                       ],
                     ),
