@@ -75,6 +75,117 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
     Colors.pink.shade50, // Much softer pink
   ];
 
+  Future<void> _saveAsTemplate(String templateName) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Save the items as a template
+    await prefs.setString(
+      'stock_items_template_$templateName',
+      json.encode(_items), // Save the items as a JSON string
+    );
+  }
+
+  // this method shows a dialog to enter a template name
+  // it returns the entered template name and save the template
+  // if the user clicks on save button
+  Future<String?> _showTemplateNameDialog(BuildContext context) async {
+    TextEditingController controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter Template Name'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(hintText: 'Template Name'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(null); // Cancel
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(controller.text); // Save
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // this method shows a dialog to select a template from the saved templates
+  // it returns the selected template name
+  Future<String?> _showTemplateSelectDialog(
+      BuildContext context, List<String> templates) async {
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select a Template'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: templates.map((template) {
+                return ListTile(
+                  title: Text(template),
+                  onTap: () {
+                    Navigator.of(context)
+                        .pop(template); // Return selected template
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cancel the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // this method loads the saved templates from the shared preferences
+  // it returns a list of template names
+  Future<List<String>> _loadSavedTemplates() async {
+    final prefs = await SharedPreferences.getInstance();
+    final templateKeys = prefs
+        .getKeys()
+        .where((key) => key.startsWith('stock_items_template_'))
+        .toList();
+
+    // Extract template names from the keys and return them as a list
+    return templateKeys
+        .map((key) => key.replaceFirst('stock_items_template_', ''))
+        .toList();
+  }
+
+  Future<void> _loadTemplateData(String templateName) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Retrieve the saved template data
+    final savedTemplate = prefs.getString('stock_items_template_$templateName');
+    if (savedTemplate != null) {
+      List<Map<String, dynamic>> templateItems =
+          List<Map<String, dynamic>>.from(json.decode(savedTemplate));
+      // Optionally, update your app's state with the loaded template data
+      setState(() {
+        _items = templateItems;
+      });
+      print('Template data loaded');
+    } else {
+      print('No template found for $templateName');
+    }
+  }
+
   void _showNewItemDialog() {
     final nameController = TextEditingController();
     final priceController = TextEditingController();
@@ -670,6 +781,41 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                           icon: Icons.cleaning_services_rounded,
                           label: 'Clear All',
                           onTap: _clearAllQty,
+                        ),
+                        _actionBox(
+                          icon: Icons.save,
+                          label: 'Save',
+                          onTap: () async {
+                            String? templateName =
+                                await _showTemplateNameDialog(context);
+                            if (templateName != null &&
+                                templateName.isNotEmpty) {
+                              await _saveAsTemplate(
+                                  templateName); // Pass the templateName
+                            }
+                          },
+                        ),
+                        _actionBox(
+                          // create a new action box for loading saved templates
+                          icon: Icons.folder_open,
+                          label: 'Load',
+                          onTap: () async {
+                            List<String> templates =
+                                await _loadSavedTemplates(); // Fetch saved templates
+                            if (templates.isEmpty) {
+                              print('No templates saved');
+                            } else {
+                              String? selectedTemplate =
+                                  await _showTemplateSelectDialog(
+                                      context, templates);
+                              if (selectedTemplate != null) {
+                                // Handle the loading of the selected template
+                                print('Template selected: $selectedTemplate');
+                                // Optionally, you can load the data of the selected template here
+                                await _loadTemplateData(selectedTemplate);
+                              }
+                            }
+                          },
                         ),
                       ],
                     ),
