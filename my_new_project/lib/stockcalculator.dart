@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,10 +10,10 @@ class StockCalculatorPage extends StatefulWidget {
   final String planDate;
 
   const StockCalculatorPage({
-    Key? key,
+    super.key,
     required this.planName,
     required this.planDate,
-  }) : super(key: key);
+  });
 
   // Method to format the date
   String _formatDate(String date) {
@@ -133,7 +135,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('Select a Template'),
-              content: Container(
+              content: SizedBox(
                 width: 300, // Set a fixed width for both dialogs
                 height: 250, // Reduced height for a more compact dialog
                 child: SingleChildScrollView(
@@ -194,7 +196,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Template'),
-          content: Container(
+          content: SizedBox(
             width: 300, // Set a fixed width for both dialogs
             height: 40, // Reduced height for delete confirmation
             child: Column(
@@ -257,10 +259,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
       setState(() {
         _items = templateItems;
       });
-      print('Template data loaded');
-    } else {
-      print('No template found for $templateName');
-    }
+    } else {}
   }
 
   void _showNewItemDialog() {
@@ -880,14 +879,12 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                             List<String> templates =
                                 await _loadSavedTemplates(); // Fetch saved templates
                             if (templates.isEmpty) {
-                              print('No templates saved');
                             } else {
                               String? selectedTemplate =
                                   await _showTemplateSelectDialog(
                                       context, templates);
                               if (selectedTemplate != null) {
-                                // Handle the loading of the selected template
-                                print('Template selected: $selectedTemplate');
+                                // Load the selected template data
                                 // Optionally, you can load the data of the selected template here
                                 await _loadTemplateData(selectedTemplate);
                               }
