@@ -1,13 +1,31 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class StockCalculatorPage extends StatefulWidget {
   final String planName;
+  final String planDate;
 
-  const StockCalculatorPage({super.key, required this.planName});
+  const StockCalculatorPage({
+    Key? key,
+    required this.planName,
+    required this.planDate,
+  }) : super(key: key);
+
+  // Method to format the date
+  String _formatDate(String date) {
+    try {
+      final parsedDate = DateTime.tryParse(date);
+      if (parsedDate != null) {
+        return DateFormat('MMMM d, y').format(parsedDate); // Format the date
+      } else {
+        return date; // If parsing fails, return the original string
+      }
+    } catch (e) {
+      return date; // If there's any error, return the original string
+    }
+  }
 
   @override
   State<StockCalculatorPage> createState() => _StockCalculatorPageState();
@@ -400,6 +418,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final formattedDate = widget._formatDate(widget.planDate);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Stock Calculator'),
@@ -409,7 +428,35 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            const SizedBox(height: 15),
+            // Display the plan name and date
+            Padding(
+              padding: const EdgeInsets.only(top: 0, bottom: 10),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(fontSize: 18, color: Colors.black87),
+                  children: [
+                    const TextSpan(
+                      text: '📋 ',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    TextSpan(
+                      text: widget.planName,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const TextSpan(text: '  •  '),
+                    TextSpan(
+                      text: formattedDate,
+                      style: const TextStyle(
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             Expanded(
               child: ListView.builder(
                 itemCount: _items.length,

@@ -1,5 +1,6 @@
 import 'package:coreteam/stockcalculator.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
@@ -55,10 +56,39 @@ class _MyPlansPageState extends State<MyPlansPage> {
   }
 
   Future<void> _deletePlan(int index) async {
-    setState(() {
-      savedPlans.removeAt(index);
-    });
-    await _savePlans();
+    // Show a confirmation dialog before deleting
+    bool? confirmDelete = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: const Text('Are you sure you want to delete this plan?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // Cancel and return false
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .pop(true); // Confirm deletion and return true
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // If the user confirms, delete the plan
+    if (confirmDelete == true) {
+      setState(() {
+        savedPlans.removeAt(index);
+      });
+      await _savePlans(); // Save the updated state after deletion
+    }
   }
 
   Future<void> _editPlan(int index) async {
@@ -224,6 +254,12 @@ class _MyPlansPageState extends State<MyPlansPage> {
       final name = parts[0].split(':')[1].trim().replaceAll("'", "");
       final date = parts[1].split(':')[1].trim().replaceAll("'", "");
 
+      // Parse the date and format it like "April 8, 2025"
+      final parsedDate = DateTime.tryParse(date);
+      final formattedDate = parsedDate != null
+          ? DateFormat('MMMM d, y').format(parsedDate)
+          : date;
+
       return Card(
         margin: const EdgeInsets.symmetric(vertical: 8.0),
         elevation: 5,
@@ -239,7 +275,7 @@ class _MyPlansPageState extends State<MyPlansPage> {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           subtitle: Text(
-            date,
+            formattedDate, // Use the formatted date here
             style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
           trailing: Row(
@@ -253,7 +289,6 @@ class _MyPlansPageState extends State<MyPlansPage> {
                 icon: const Icon(Icons.delete, size: 20),
                 onPressed: () => _deletePlan(index),
               ),
-              // In the _buildPlanCard method, modify the onPressed for the calculator icon:
               IconButton(
                 icon: const Icon(Icons.calculate, size: 20),
                 tooltip: 'Stock Calculator',
@@ -261,11 +296,15 @@ class _MyPlansPageState extends State<MyPlansPage> {
                   final planParts = savedPlans[index].split(',');
                   final name =
                       planParts[0].split(':')[1].trim().replaceAll("'", "");
-
+                  final date =
+                      planParts[1].split(':')[1].trim().replaceAll("'", "");
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => StockCalculatorPage(planName: name),
+                      builder: (context) => StockCalculatorPage(
+                        planName: name,
+                        planDate: date,
+                      ),
                     ),
                   );
 
