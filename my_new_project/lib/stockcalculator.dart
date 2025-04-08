@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'salespage.dart';
 
 class StockCalculatorPage extends StatefulWidget {
   final String planName;
@@ -39,11 +40,11 @@ class ActionBox extends StatefulWidget {
   final VoidCallback onTap;
 
   const ActionBox({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   State<ActionBox> createState() => _ActionBoxState();
@@ -1023,18 +1024,78 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Overall Total:',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          const Text(
+                            'Overall Total:',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _calculateTotalPrice().toStringAsFixed(2),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        ' ${_calculateTotalPrice().toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          final jsonString =
+                              prefs.getString('stock_items_${widget.planName}');
+                          if (jsonString != null) {
+                            final List<dynamic> jsonList =
+                                json.decode(jsonString);
+                            final List<Map<String, dynamic>> stockList =
+                                jsonList.cast<Map<String, dynamic>>();
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SalesPage(
+                                  stockData: stockList,
+                                  planName: widget.planName,
+                                ),
+                              ),
+                            );
+                          } else {
+                            // Optionally show a message if no stock found
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content:
+                                    Text('No stock data found for this plan'),
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color(0xFF4CAF50), // Modern green
+                          foregroundColor: Colors.white, // Icon/text color
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10), // Reduced padding
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4,
+                          shadowColor: Colors.black45,
+                          textStyle: const TextStyle(
+                            fontSize: 16, // Smaller text size
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        icon: const Icon(Icons.attach_money,
+                            size: 20), // Smaller icon size
+                        label: const Text('Sales'),
                       ),
                     ],
-                  ),
+                  )
                 ],
               ),
             ),
