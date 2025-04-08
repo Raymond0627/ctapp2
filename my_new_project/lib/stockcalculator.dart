@@ -123,45 +123,109 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
   // it returns the selected template name
   Future<String?> _showTemplateSelectDialog(
       BuildContext context, List<String> templates) async {
+    // Create a local copy of templates that we can modify
+    List<String> localTemplates = List.from(templates);
+
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'Select a Template',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: templates.map((template) {
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 5),
-                  child: ListTile(
-                    leading: Icon(Icons.insert_drive_file, color: Colors.blue),
-                    title: Text(template),
-                    onTap: () {
-                      Navigator.of(context)
-                          .pop(template); // Return selected template
-                    },
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Select a Template'),
+              content: Container(
+                width: 300, // Set a fixed width for both dialogs
+                height: 250, // Reduced height for a more compact dialog
+                child: SingleChildScrollView(
+                  child: ListBody(
+                    children: localTemplates.map((template) {
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 5),
+                        child: ListTile(
+                          leading: const Icon(Icons.insert_drive_file,
+                              color: Colors.blue),
+                          title: Text(template),
+                          trailing: Container(
+                            padding: const EdgeInsets.only(
+                                right:
+                                    0), // Adjust padding to move icon closer to edge
+                            child: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+                                final shouldDelete =
+                                    await _showDeleteConfirmationDialog(
+                                        context, template);
+                                if (shouldDelete ?? false) {
+                                  await _deleteTemplate(template);
+                                  setState(() {
+                                    localTemplates.remove(template);
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.of(context)
+                                .pop(template); // Return selected template
+                          },
+                        ),
+                      );
+                    }).toList(),
                   ),
-                );
-              }).toList(),
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool?> _showDeleteConfirmationDialog(
+      BuildContext context, String template) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Template'),
+          content: Container(
+            width: 300, // Set a fixed width for both dialogs
+            height: 40, // Reduced height for delete confirmation
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Text('Are you sure you want to delete this template?'),
+              ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Cancel the dialog
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(fontSize: 16),
-              ),
+              onPressed: () => Navigator.of(context).pop(false), // User cancels
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true), // User confirms
+              child: const Text('Delete'),
             ),
           ],
         );
       },
     );
+  }
+
+  Future<void> _deleteTemplate(String template) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('stock_items_template_$template');
+    // Force a UI refresh
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   // this method loads the saved templates from the shared preferences
