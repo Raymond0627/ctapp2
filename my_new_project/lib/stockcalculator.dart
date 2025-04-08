@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, unused_local_variable
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -260,6 +260,16 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
         _items = templateItems;
       });
     } else {}
+  }
+
+  //to sort the items alphabetically
+  void _sortItemsAlphabetically() {
+    setState(() {
+      _items.sort((a, b) => (a['name'] as String)
+          .toLowerCase()
+          .compareTo((b['name'] as String).toLowerCase()));
+    });
+    _saveItems();
   }
 
   void _showNewItemDialog() {
@@ -648,6 +658,10 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
               child: ListView.builder(
                 itemCount: _items.length,
                 itemBuilder: (context, index) {
+                  final sortedItems = List<Map<String, dynamic>>.from(_items)
+                    ..sort((a, b) => (a['name'] as String)
+                        .toLowerCase()
+                        .compareTo((b['name'] as String).toLowerCase()));
                   final item = _items[index];
                   final totalPrice =
                       (item['price'] as double) * (item['quantity'] as int);
@@ -656,33 +670,33 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                     background: Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 243, 33, 33),
+                        color: const Color.fromARGB(255, 54, 133, 244),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: Padding(
                           padding: const EdgeInsets.only(right: 20),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                          child: const Icon(Icons.edit, color: Colors.white),
                         ),
                       ),
                     ),
                     secondaryBackground: Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 54, 133, 244),
+                        color: const Color.fromARGB(255, 243, 33, 33),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 20),
-                          child: const Icon(Icons.edit, color: Colors.white),
+                          child: const Icon(Icons.delete, color: Colors.white),
                         ),
                       ),
                     ),
                     confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
+                      if (direction == DismissDirection.endToStart) {
                         return await showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -705,14 +719,14 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                             );
                           },
                         );
-                      } else if (direction == DismissDirection.endToStart) {
+                      } else if (direction == DismissDirection.startToEnd) {
                         _showEditItemDialog(index);
                         return false;
                       }
                       return false;
                     },
                     onDismissed: (direction) {
-                      if (direction == DismissDirection.startToEnd) {
+                      if (direction == DismissDirection.endToStart) {
                         _deleteItem(index);
                       }
                     },
@@ -847,6 +861,11 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                           icon: Icons.add,
                           label: 'Add',
                           onTap: _showNewItemDialog,
+                        ),
+                        _actionBox(
+                          icon: Icons.sort_by_alpha,
+                          label: 'Sort A-Z',
+                          onTap: _sortItemsAlphabetically,
                         ),
                         _actionBox(
                           icon: Icons.delete,
