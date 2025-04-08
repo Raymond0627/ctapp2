@@ -58,6 +58,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
         'stock_items_${widget.planName}', json.encode(_items));
   }
 
+// this method is for color selection
   final List<Color> availableColors = [
     Colors.red.shade100, // Slightly stronger red
     Colors.orange.shade100, // Slightly stronger orange
@@ -126,16 +127,23 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Select a Template'),
+          title: const Text(
+            'Select a Template',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: SingleChildScrollView(
             child: ListBody(
               children: templates.map((template) {
-                return ListTile(
-                  title: Text(template),
-                  onTap: () {
-                    Navigator.of(context)
-                        .pop(template); // Return selected template
-                  },
+                return Card(
+                  margin: EdgeInsets.symmetric(vertical: 5),
+                  child: ListTile(
+                    leading: Icon(Icons.insert_drive_file, color: Colors.blue),
+                    title: Text(template),
+                    onTap: () {
+                      Navigator.of(context)
+                          .pop(template); // Return selected template
+                    },
+                  ),
                 );
               }).toList(),
             ),
@@ -145,7 +153,10 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
               onPressed: () {
                 Navigator.of(context).pop(); // Cancel the dialog
               },
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(fontSize: 16),
+              ),
             ),
           ],
         );
@@ -168,6 +179,8 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
         .toList();
   }
 
+// this method loads the template data from the shared preferences
+  // it returns the loaded template data and updates the state of the app
   Future<void> _loadTemplateData(String templateName) async {
     final prefs = await SharedPreferences.getInstance();
 
