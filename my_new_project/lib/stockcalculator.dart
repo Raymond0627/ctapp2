@@ -33,6 +33,82 @@ class StockCalculatorPage extends StatefulWidget {
   State<StockCalculatorPage> createState() => _StockCalculatorPageState();
 }
 
+class ActionBox extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const ActionBox({
+    Key? key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  State<ActionBox> createState() => _ActionBoxState();
+}
+
+class _ActionBoxState extends State<ActionBox> {
+  Color _bgColor = Colors.white;
+
+  void _handleTap() {
+    setState(() => _bgColor = Colors.teal.withOpacity(0.2)); // highlight
+    widget.onTap();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) {
+        setState(() => _bgColor = Colors.white); // back to normal
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: _bgColor,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 2,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: InkWell(
+            onTap: _handleTap,
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              height: 50,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(widget.icon, size: 18, color: Colors.teal),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.label,
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _StockCalculatorPageState extends State<StockCalculatorPage> {
   List<Map<String, dynamic>> _items = [];
   bool _isMenuExpanded = false;
@@ -857,27 +933,27 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _actionBox(
+                        ActionBox(
                           icon: Icons.add,
                           label: 'Add',
                           onTap: _showNewItemDialog,
                         ),
-                        _actionBox(
+                        ActionBox(
                           icon: Icons.sort_by_alpha,
-                          label: 'Sort A-Z',
+                          label: 'Sort',
                           onTap: _sortItemsAlphabetically,
                         ),
-                        _actionBox(
+                        ActionBox(
                           icon: Icons.delete,
                           label: 'Delete All',
                           onTap: _deleteAllItems,
                         ),
-                        _actionBox(
+                        ActionBox(
                           icon: Icons.cleaning_services_rounded,
                           label: 'Clear All',
                           onTap: _clearAllQty,
                         ),
-                        _actionBox(
+                        ActionBox(
                           icon: Icons.save,
                           label: 'Save',
                           onTap: () async {
@@ -890,7 +966,7 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
                             }
                           },
                         ),
-                        _actionBox(
+                        ActionBox(
                           // create a new action box for loading saved templates
                           icon: Icons.folder_open,
                           label: 'Load',
@@ -963,59 +1039,6 @@ class _StockCalculatorPageState extends State<StockCalculatorPage> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _actionBox({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Flexible(
-      // Changed from Expanded to Flexible for better control
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Material(
-          color: const Color.fromARGB(0, 255, 255, 255),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              constraints: const BoxConstraints(
-                minHeight: 50,
-                maxHeight: 50,
-              ),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 255, 255, 255),
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 2,
-                    offset: Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 18, color: Colors.teal),
-                    const SizedBox(height: 4),
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );
